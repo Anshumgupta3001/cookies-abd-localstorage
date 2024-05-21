@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <select id="dropdown">
+      <option value="" selected>Select</option>
+      <option value="Europe/Moscow">Russia</option>
+      <option value="America/New_York">USA</option>
+      <option value="America/Toronto">Canada</option>
+      <option value="Australia/Sydney">Australia</option>
+      <option value="America/Mexico_City">Mexico</option>
+      <option value="Asia/Jakarta">Indonesia</option>
+      <option value="Europe/Madrid">Spain</option>
+      <option value="Europe/Lisbon">Portugal</option>
+      <option value="Europe/Paris">France</option>
+      <option value="Asia/Bangkok">Thailand</option>
+    </select>
+
+    <p id="selectedCountryTime"></p>
+
+    <select id="dropdown">
+      <option value="" selected>Select</option>
+    </select>
+
+    <p id="selectedCountryDate"></p>
+    <div id="buttonContainer"></div>
+    <div id="buttonContainer2"></div>
+    <div id="timerDisplay" style="display: none"></div>
+
+    <script>
+      //     function populateDropdown() {
+      //     fetch('/dropdown')
+      //         .then(response => response.json())
+      //         .then(data => {
+      //             const dropdown = document.getElementById("dropdown");
+      //             data.forEach(country => {
+      //                 const option = document.createElement("option");
+      //                 option.text = country;
+      //                 option.value = country;
+      //                 dropdown.add(option);
+      //             });
+      //         })
+      //         .catch(error => console.error('Error fetching dropdown data:', error));
+      // }
+      let randomNumber;
+      let timeout;
+      let attempts = 3;
+
+      // Function to generate and display random number
+      function generateRandomNumber() {
+        randomNumber = Math.floor(1000 + Math.random() * 9000);
+        const buttonContainer2 = document.getElementById("buttonContainer2");
+        buttonContainer2.innerHTML = `<button>${randomNumber}</button>`;
+      }
+
+      // Function to update the date and time based on the selected country
+      function updateDateTime(timezone) {
+        try {
+          const selectedTimeZone =
+            timezone ||
+            document.getElementById("dropdown").value ||
+            "America/New_York";
+          const date = new Date();
+          const formatter = new Intl.DateTimeFormat("en-US", {
+            timeZone: selectedTimeZone,
+            hour12: false,
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "numeric",
+            minute: "numeric",
+            second: "numeric",
+          });
+          const formattedDate = formatter.format(date);
+          document.getElementById(
+            "selectedCountryDate"
+          ).innerHTML = `Date and time in ${selectedTimeZone}: ${formattedDate}`;
+
+          displayIndianTime();
+
+          // Update truncated value button
+          const selectedOption =
+            document.getElementById("dropdown").selectedOptions[0].text;
+          const truncatedValue = selectedOption.substring(0, 3);
+          const buttonContainer = document.getElementById("buttonContainer");
+          buttonContainer.innerHTML = `<button>${truncatedValue}</button>`;
+
+          // Set selected option as a cookie
+          //setCookie("selectedOption", selectedOption, 30); // Set cookie with selected option value
+
+          // setLocalStorage("selectedOption", selectedOption);
+        } catch (error) {
+          console.error("Error in updateDateTime:", error);
+        }
+      }
+
+      function displayIndianTime() {
+        const indianTimezone = "Asia/Kolkata";
+        const date = new Date();
+        const formatter = new Intl.DateTimeFormat("en-US", {
+          timeZone: indianTimezone,
+          hour12: false,
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+          second: "numeric",
+        });
+        const formattedDate = formatter.format(date);
+        document.getElementById(
+          "selectedCountryTime"
+        ).innerHTML = `Current time in India: ${formattedDate}`;
+      }
+
+      function handleOTP() {
+        clearTimeout(timeout);
+
+        if (attempts >= 1) {
+          // Prompt for OTP entry
+          const enteredOTP = prompt("Enter OTP:");
+          if (enteredOTP && parseInt(enteredOTP) === randomNumber) {
+            document.body.style.backgroundColor = "";
+            generateRandomNumber();
+
+            document.getElementById("timerDisplay").style.display = "block";
+            startTimer(5);
+
+            timeout = setTimeout(handleTimeout, 5000);
+            return;
+          } else {
+            attempts--;
+            document.body.style.backgroundColor = "red";
+            alert(`Incorrect OTP! You have ${attempts} attempts left.`);
+            if (attempts === 0) {
+              document.documentElement.remove();
+            }
+            timeout = setTimeout(() => {
+              handleOTP();
+            }, 5000);
+          }
+        }
+      }
+
+      function handleTimeout() {
+        alert("Timeout reached! Please enter OTP:");
+        handleOTP();
+      }
+
+      document.getElementById("dropdown").addEventListener("change", () => {
+        displayIndianTime();
+        generateRandomNumber();
+        clearTimeout(timeout);
+        timeout = setTimeout(handleTimeout, 5000);
+        updateDateTime();
+        document.getElementById("timerDisplay").style.display = "block";
+        startTimer(5);
+      });
+
+      // Countdown timer function
+      function startTimer(duration) {
+        let timer = duration;
+        const timerDisplay = document.getElementById("timerDisplay");
+        timerDisplay.innerHTML = `Timer: ${timer} seconds`;
+        const countdown = setInterval(() => {
+          timer--;
+          timerDisplay.innerHTML = `Timer: ${timer} seconds`;
+          if (timer <= 0) {
+            clearInterval(countdown);
+            timerDisplay.style.display = "none";
+          }
+        }, 1000);
+      }
+
+      // Function to get value from local storage
+      function getLocalStorage(name) {
+        return localStorage.getItem(name);
+      }
+
+      // Function to set value in local storage
+      function setLocalStorage(name, value) {
+        localStorage.setItem(name, value);
+      }
+
+      // Function to get value from cookie
+      function getCookie(name) {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.startsWith(name + "=")) {
+            return cookie.substring(name.length + 1); // Remove the extra character from the substring
+          }
+        }
+        return null;
+      }
+
+      // Function to set cookie
+      function setCookie(cname, cvalue, exdays) {
+        const d = new Date();
+        d.setTime(d.getTime() + exdays * 24 * 60 * 60 * 1000);
+        let expires = "expires=" + d.toUTCString();
+        document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+      }
+
+      // function checkStoredData() {
+      let selectedOption =
+        getCookie("selectedOption") || getLocalStorage("selectedOption");
+      const dropdown = document.getElementById("dropdown");
+      let optionFound = false;
+
+      for (let i = 0; i < dropdown.options.length; i++) {
+        if (dropdown.options[i].text === selectedOption) {
+          dropdown.selectedIndex = i;
+          optionFound = true;
+
+          break;
+
+          if (!optionFound) {
+            const options = dropdown.options;
+            for (let i = 0; i < options.length; i++) {
+              if (options[i].text === getLocalStorage("selectedOption")) {
+                dropdown.selectedIndex = i;
+                optionFound = true;
+              }
+            }
+          }
+        }
+
+        if (!optionFound) {
+          dropdown.selectedIndex = 0;
+        }
+      }
+
+      window.onload = function () {
+        // Fetch dropdown data from the API
+        populateDropdown();
+
+        handleAllFunctions();
+        updateDateTime();
+      };
+
+      function handleAllFunctions() {
+        displayIndianTime();
+        generateRandomNumber();
+        clearTimeout(timeout);
+        timeout = setTimeout(handleTimeout, 5000);
+        updateDateTime();
+        document.getElementById("timerDisplay").style.display = "block";
+        startTimer(5);
+      }
+
+      displayIndianTime();
+    </script>
+  </body>
+</html>
